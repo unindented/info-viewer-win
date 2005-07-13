@@ -1,0 +1,166 @@
+///////////////////////////////////////////////////////////////////////////////
+///
+/// iNFO - Utility to view NFO and DIZ files
+/// Copyright (C) 2005 Daniel Pérez Álvarez <unindented@gmail.com>
+///
+///////////////////////////////////////////////////////////////////////////////
+
+#include <windows.h>
+#include "resource.h"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Spanish Resources
+//
+
+#ifdef _WIN32
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+#pragma code_page(1252)
+#endif // _WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Manifest
+//
+
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "manifest.xml"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+IDI_BIG   ICON "big.ico"
+IDI_SMALL ICON "small.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDC_MAIN MENU
+BEGIN
+    POPUP "&Archivo"
+    BEGIN
+        MENUITEM "&Abrir...\tCtrl+O", ID_FILE_OPEN
+        MENUITEM SEPARATOR
+        MENUITEM "Sa&lir",            ID_FILE_EXIT
+    END
+    POPUP "&Edición"
+    BEGIN
+        MENUITEM "&Preferencias...",  ID_EDIT_PREF
+    END
+    POPUP "Ay&uda"
+    BEGIN
+        MENUITEM "&Acerca de iNFO...",        ID_HELP_ABOUT
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDC_MAIN ACCELERATORS
+BEGIN
+    "O",   ID_FILE_OPEN,  VIRTKEY, CONTROL
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_PREF DIALOG 0, 0, 154, 114
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Preferencias"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    COMBOBOX        IDC_COMBO_LANG, 14, 20, 126, 54, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "Idioma", IDC_STATIC, 6, 6, 142, 34
+
+    CONTROL         "Archivos NFO (*.nfo)", IDC_CHECK_NFO, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 14, 60, 128, 10
+    CONTROL         "Archivos DIZ (*.diz)", IDC_CHECK_DIZ, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 14, 72, 128, 10
+    GROUPBOX        "Asociar aplicación con", IDC_STATIC, 6, 46, 142, 42
+
+    DEFPUSHBUTTON   "Aceptar", IDOK, 44, 94, 50, 14
+    PUSHBUTTON      "Cancelar", IDCANCEL, 98, 94, 50, 14
+END
+
+IDD_ABOUT DIALOG  0, 0, 206, 124
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Acerca de iNFO"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_BIG, IDC_MYICON, 10, 16, 16, 16
+
+    CTEXT           "iNFO 1.0.0 (2005/07/13)", IDC_STATIC, 50, 18, 142, 8, SS_NOPREFIX
+    CTEXT           "Copyright (C) 2005 Daniel Pérez Álvarez", IDC_STATIC, 50, 28, 142, 8, SS_NOPREFIX
+    GROUPBOX        "Información", IDC_STATIC, 42, 6, 158, 36
+
+    CTEXT           "Este programa es software libre y no ofrece ABSOLUTAMENTE NINGUNA GARANTÍA. Vea el archivo COPYING para los detalles de la GNU General Public License.", IDC_STATIC, 14, 60, 178, 32, SS_NOPREFIX
+    GROUPBOX        "Advertencia legal", IDC_STATIC, 6, 48, 194, 50
+
+    DEFPUSHBUTTON   "Aceptar", IDOK, 78, 104, 50, 14
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE
+BEGIN
+    IDC_MAIN        "MAIN"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APP_TITLE   "iNFO"
+    IDS_NFO_NAME    "iNFO.NFO"
+    IDS_NFO_DESC    "NFO File"
+    IDS_DIZ_NAME    "iNFO.DIZ"
+    IDS_DIZ_DESC    "DIZ File"
+    IDS_FILTER      "Archivos NFO y DIZ (*.nfo; *.diz)|*.nfo;*.diz|Todos los archivos (*.*)|*.*|"
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,1
+ PRODUCTVERSION 1,0,0,1
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "000a04b0"
+        BEGIN
+            VALUE "Comments", "\0"
+            VALUE "CompanyName", "\0"
+            VALUE "FileDescription", "iNFO\0"
+            VALUE "FileVersion", "1, 0, 0, 1\0"
+            VALUE "InternalName", "info\0"
+            VALUE "LegalCopyright", "Copyright (C) 2005\0"
+            VALUE "OriginalFilename", "info.exe\0"
+            VALUE "ProductName", "iNFO\0"
+            VALUE "ProductVersion", "1, 0, 0, 1\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x00a, 1200
+    END
+END
