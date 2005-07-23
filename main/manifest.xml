@@ -4,7 +4,7 @@
     processorArchitecture="X86"
     type="win32"
     name="iNFO"
-    version="1.0.0.1" />
+    version="1.0.1.1" />
   <description></description>
   <dependency>
     <dependentAssembly>

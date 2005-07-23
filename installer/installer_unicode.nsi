@@ -1,13 +1,15 @@
 ; Defines
-!define PRODUCT_NAME "iNFO"
-!define PRODUCT_SHORT_NAME "info"
-!define PRODUCT_VERSION "1.0.0"
-!define PRODUCT_DIR_KEY "Software\Microsoft\Windows\CurrentVersion\App Paths\${PRODUCT_SHORT_NAME}.exe"
-!define PRODUCT_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
-!define PRODUCT_UNINST_ROOT_KEY "HKLM"
-!define PRODUCT_STARTMENU_REGVAL "NSIS:StartMenuDir"
+!define PRODUCT_NAME              "iNFO"
+!define PRODUCT_SHORT_NAME        "info"
+!define PRODUCT_VERSION           "1.0.1"
+!define PRODUCT_OPENWITH_KEY      "Applications\${PRODUCT_SHORT_NAME}.exe"
+!define PRODUCT_DIR_KEY           "Software\Microsoft\Windows\CurrentVersion\App Paths\${PRODUCT_SHORT_NAME}.exe"
+!define PRODUCT_UNINST_KEY        "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
+!define PRODUCT_UNINST_ROOT_KEY   "HKLM"
+!define PRODUCT_STARTMENU_REGVAL  "NSIS:StartMenuDir"
 
 SetCompressor lzma
+
 
 ; MUI 1.67 compatible ------
 !include "MUI.nsh"
@@ -20,7 +22,7 @@ SetCompressor lzma
 ; Welcome page
 !insertmacro MUI_PAGE_WELCOME
 ; License page
-!insertmacro MUI_PAGE_LICENSE "COPYING"
+!insertmacro MUI_PAGE_LICENSE "license.txt"
 ; Directory page
 !insertmacro MUI_PAGE_DIRECTORY
 ; Start menu page
@@ -48,6 +50,7 @@ var ICONS_GROUP
 
 ; MUI end ------
 
+
 Name "${PRODUCT_NAME} ${PRODUCT_VERSION}"
 OutFile "${PRODUCT_SHORT_NAME}_${PRODUCT_VERSION}_winnt.exe"
 InstallDir "$PROGRAMFILES\${PRODUCT_NAME}"
@@ -58,7 +61,8 @@ ShowUnInstDetails show
 Section "MainSection" MAINSEC
   SetOutPath "$INSTDIR"
   SetOverwrite ifnewer
-  File "COPYING"
+  File "license.txt"
+  File "changelog.txt"
   File "..\release_unicode\${PRODUCT_SHORT_NAME}.exe"
   SetOutPath "$INSTDIR\lang\9"
   File "..\release_unicode\lang\9\res.dll"
@@ -84,6 +88,7 @@ SectionEnd
 
 Section -Post
   WriteUninstaller "$INSTDIR\uninst.exe"
+  WriteRegStr HKCR "${PRODUCT_OPENWITH_KEY}" "" ""
   WriteRegStr HKLM "${PRODUCT_DIR_KEY}" "" "$INSTDIR\${PRODUCT_SHORT_NAME}.exe"
   WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "DisplayName" "$(^Name)"
   WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "UninstallString" "$INSTDIR\uninst.exe"
@@ -109,7 +114,8 @@ Section Uninstall
   Delete "$INSTDIR\lang\10\res.dll"
   Delete "$INSTDIR\lang\9\res.dll"
   Delete "$INSTDIR\${PRODUCT_SHORT_NAME}.exe"
-  Delete "$INSTDIR\COPYING"
+  Delete "$INSTDIR\changelog.txt"
+  Delete "$INSTDIR\license.txt"
 
   Delete "$SMPROGRAMS\$ICONS_GROUP\Uninstall.lnk"
   Delete "$DESKTOP\${PRODUCT_NAME}.lnk"
@@ -123,5 +129,6 @@ Section Uninstall
 
   DeleteRegKey ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}"
   DeleteRegKey HKLM "${PRODUCT_DIR_KEY}"
+  DeleteRegKey HKCR "${PRODUCT_OPENWITH_KEY}"
   SetAutoClose true
 SectionEnd

@@ -89,21 +89,18 @@ BEGIN
     PUSHBUTTON      "Cancelar", IDCANCEL, 98, 94, 50, 14
 END
 
-IDD_ABOUT DIALOG  0, 0, 206, 124
+IDD_ABOUT DIALOG  0, 0, 206, 68
 STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Acerca de iNFO"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON            IDI_BIG, IDC_MYICON, 10, 16, 16, 16
 
-    CTEXT           "iNFO 1.0.0 (2005/07/13)", IDC_STATIC, 50, 18, 142, 8, SS_NOPREFIX
+    CTEXT           "iNFO 1.0.1 (2005-07-23)", IDC_STATIC, 50, 18, 142, 8, SS_NOPREFIX
     CTEXT           "Copyright (C) 2005 Daniel Pérez Álvarez", IDC_STATIC, 50, 28, 142, 8, SS_NOPREFIX
     GROUPBOX        "Información", IDC_STATIC, 42, 6, 158, 36
 
-    CTEXT           "Este programa es software libre y no ofrece ABSOLUTAMENTE NINGUNA GARANTÍA. Vea el archivo COPYING para los detalles de la GNU General Public License.", IDC_STATIC, 14, 60, 178, 32, SS_NOPREFIX
-    GROUPBOX        "Advertencia legal", IDC_STATIC, 6, 48, 194, 50
-
-    DEFPUSHBUTTON   "Aceptar", IDOK, 78, 104, 50, 14
+    DEFPUSHBUTTON   "Aceptar", IDOK, 78, 48, 50, 14
 END
 
 /////////////////////////////////////////////////////////////////////////////
@@ -132,17 +129,17 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,1
- PRODUCTVERSION 1,0,0,1
- FILEFLAGSMASK 0x3fL
+  FILEVERSION 1,0,1,1
+  PRODUCTVERSION 1,0,1,1
+  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
- FILEFLAGS 0x1L
+  FILEFLAGS 0x1L
 #else
- FILEFLAGS 0x0L
+  FILEFLAGS 0x0L
 #endif
- FILEOS 0x4L
- FILETYPE 0x1L
- FILESUBTYPE 0x0L
+  FILEOS 0x4L
+  FILETYPE 0x1L
+  FILESUBTYPE 0x0L
 BEGIN
     BLOCK "StringFileInfo"
     BEGIN
@@ -156,7 +153,7 @@ BEGIN
             VALUE "LegalCopyright", "Copyright (C) 2005\0"
             VALUE "OriginalFilename", "info.exe\0"
             VALUE "ProductName", "iNFO\0"
-            VALUE "ProductVersion", "1, 0, 0, 1\0"
+            VALUE "ProductVersion", "1, 0, 1, 1\0"
         END
     END
     BLOCK "VarFileInfo"

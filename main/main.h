@@ -44,6 +44,9 @@ extern TCHAR g_szFontName[LF_FACESIZE];     // edit control font name
 extern LONG g_lFontSize;                    // edit control font size
 extern COLORREF g_crEditFg;                 // edit control foreground color
 extern COLORREF g_crEditBg;                 // edit control background color
+extern BOOL g_bMaximized;                   // window maximized
+extern LONG g_nWidth;                       // window width
+extern LONG g_nHeight;                      // window height
 
 void ChangeLanguage(HWND, LANGID);
 BOOL CALLBACK PrefDlgProc(HWND, UINT, WPARAM, LPARAM);

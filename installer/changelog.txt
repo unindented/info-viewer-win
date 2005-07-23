@@ -1,0 +1,17 @@
+
++-------------------------+
+| iNFO 1.0.1 (2005-07-23) |
++-------------------------+
+
+ * During installation, a new registry key is written so that the application
+   appears in the "Open with..." list
+ * When closing the application, it stores in the registry if the window is
+   maximized or not, and its width and height, so that they can be restored on
+   the next execution
+ * Changed the icons a bit
+
++-------------------------+
+| iNFO 1.0.0 (2005-07-13) |
++-------------------------+
+
+ * First release

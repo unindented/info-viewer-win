@@ -32,6 +32,9 @@ TCHAR g_szFontName[LF_FACESIZE];    // edit control font size
 LONG g_nFontSize;                   // edit control font name
 COLORREF g_rgbEditFg;               // edit control foreground color
 COLORREF g_rgbEditBg;               // edit control background color
+BOOL g_bMaximized;                  // window maximized
+LONG g_nWidth;                      // window width
+LONG g_nHeight;                     // window height
 
 // other stuff
 HMODULE g_hSatDLL;                  // satellite DLL with localized resources
@@ -70,7 +73,16 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpszCm
         wsprintf(g_szLangPath, _T("%s\\lang"), g_szAppPath);
     }
 
-    ChangeLanguage(NULL, 0);
+    // load settings from the registry
+    LoadRegistrySettings();
+
+    // if there was no value for language, autodetect
+    if (0 == g_langUI)
+    {
+        g_langUI = DetectLanguage();
+    }
+    // change the language
+    ChangeLanguage(NULL, g_langUI);
 
     wc.cbSize        = sizeof (WNDCLASSEX);
     wc.style         = 0;
@@ -93,8 +105,8 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpszCm
     }
 
     hWnd = CreateWindowEx(WS_EX_ACCEPTFILES, APP_NAME, g_szAppTitle,
-        WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, DEFAULT_WIDTH, DEFAULT_HEIGHT,
+        WS_OVERLAPPEDWINDOW | (g_bMaximized ? WS_MAXIMIZE : 0),
+        CW_USEDEFAULT, CW_USEDEFAULT, g_nWidth, g_nHeight,
         NULL, NULL, hInstance, NULL);
 
     if (NULL == hWnd)
@@ -104,7 +116,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpszCm
         return FALSE;
     }
 
-    ShowWindow(hWnd, nCmdShow);
+    ShowWindow(hWnd, (g_bMaximized ? SW_SHOWMAXIMIZED : SW_SHOWNORMAL));
     UpdateWindow(hWnd);
 
     // load the accelerators
@@ -139,14 +151,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             LPCTSTR lpszCmdLine;
             TCHAR szFileName[MAX_PATH];
 
-            // load settings from the registry
-            LoadRegistrySettings();
-
-            // if there was no value for language, autodetect
-            if (0 == g_langUI)
-            {
-                g_langUI = DetectLanguage();
-            }
+            // now that we have the handle of the window we can change the language
             ChangeLanguage(hWnd, g_langUI);
 
             // create the edit control
@@ -197,12 +202,25 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
     case WM_SIZE:
         {
-            RECT rcClient;
+            RECT rcWnd;
 
             // resize the edit control so that it fits the window
-            GetClientRect(hWnd, &rcClient);
             SetWindowPos(GetDlgItem(hWnd, IDC_EDIT_MAIN), NULL,
-                0, 0, rcClient.right, rcClient.bottom, SWP_NOZORDER);
+                0, 0, LOWORD(lParam), HIWORD(lParam), SWP_NOZORDER);
+
+            // save its state, width and height
+            switch (wParam)
+            {
+            case SIZE_MAXIMIZED:
+                g_bMaximized = TRUE;
+                break;
+            case SIZE_RESTORED:
+                g_bMaximized = FALSE;
+                GetWindowRect(hWnd, &rcWnd);
+                g_nWidth = rcWnd.right - rcWnd.left;
+                g_nHeight = rcWnd.bottom - rcWnd.top;
+                break;
+            }
         }
         break;
 
@@ -276,6 +294,9 @@ void LoadRegistrySettings()
     // read settings for the current user
     if (ERROR_SUCCESS == RegCreateKeyEx(HKEY_CURRENT_USER, APP_PREFS_KEY, 0, 0, 0, KEY_READ, 0, &hKey, 0))
     {
+        ReadRegistryInt(hKey, _T("Maximized"), &g_bMaximized, FALSE);
+        ReadRegistryInt(hKey, _T("Width"), &g_nWidth, DEFAULT_WIDTH);
+        ReadRegistryInt(hKey, _T("Height"), &g_nHeight, DEFAULT_HEIGHT);
         ReadRegistryInt(hKey, _T("Language"), (LPLONG)&g_langUI, DEFAULT_LANGUI);
         ReadRegistryStr(hKey, _T("FontName"), g_szFontName, LF_FACESIZE, DEFAULT_FONTNAME);
         ReadRegistryInt(hKey, _T("FontSize"), &g_nFontSize, DEFAULT_FONTSIZE);
@@ -295,6 +316,9 @@ void SaveRegistrySettings()
     // write settings for the current user
     if (ERROR_SUCCESS == RegCreateKeyEx(HKEY_CURRENT_USER, APP_PREFS_KEY, 0, 0, 0, KEY_WRITE, 0, &hKey, 0))
     {
+        WriteRegistryInt(hKey, _T("Maximized"), g_bMaximized);
+        WriteRegistryInt(hKey, _T("Width"), g_nWidth);
+        WriteRegistryInt(hKey, _T("Height"), g_nHeight);
         WriteRegistryInt(hKey, _T("Language"), g_langUI);
         WriteRegistryStr(hKey, _T("FontName"), g_szFontName);
         WriteRegistryInt(hKey, _T("FontSize"), g_nFontSize);
@@ -333,7 +357,7 @@ void ChangeLanguage(HWND hWnd, LANGID langID)
         }
     }
 
-    if (hWnd)
+    if (NULL != hWnd)
     {
         HICON hIcon;
         HMENU hMenu;
