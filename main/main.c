@@ -24,33 +24,34 @@ TCHAR g_szNFOName[MAX_LOADSTRING];  // reg key name for NFO files
 TCHAR g_szNFODesc[MAX_LOADSTRING];  // reg key description for NFO files
 TCHAR g_szDIZName[MAX_LOADSTRING];  // reg key name for DIZ files
 TCHAR g_szDIZDesc[MAX_LOADSTRING];  // reg key description for DIZ files
-TCHAR g_szFilter[MAX_LOADSTRING];   // filter for Open dialog
 
 // obtained from the registry
 LANGID g_langUI;                    // current language
-TCHAR g_szFontName[LF_FACESIZE];    // edit control font size
-LONG g_nFontSize;                   // edit control font name
+TCHAR g_szFontName[LF_FACESIZE];    // edit control font name
+LONG g_nFontSize;                   // edit control font size
 COLORREF g_rgbEditFg;               // edit control foreground color
 COLORREF g_rgbEditBg;               // edit control background color
 BOOL g_bMaximized;                  // window maximized
 LONG g_nWidth;                      // window width
 LONG g_nHeight;                     // window height
 
-// other stuff
+// other external stuff
 HMODULE g_hSatDLL;                  // satellite DLL with localized resources
-HBRUSH g_hBrush;                    // brush to paint the edit control
 
-void LoadRegistrySettings();
-void SaveRegistrySettings();
-void UpdateTitle(HWND);
-void DoFileOpen(HWND);
-BOOL LoadTextFileToEdit(HWND, LPCTSTR);
-LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+// other internal stuff
+static HBRUSH g_hBrush;             // brush to paint the edit control
+static HFONT g_hFont;               // edit control font
+
+static VOID LoadRegistrySettings();
+static VOID SaveRegistrySettings();
+static VOID UpdateTitle(HWND);
+static BOOL LoadTextFileToEdit(HWND, LPCTSTR);
+static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 /// <summary>
 /// Entry point.
 /// </summary>
-int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpszCmdLine, int nCmdShow)
+INT WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpszCmdLine, INT nCmdShow)
 {
     HWND hWnd;
     HACCEL hAccel;
@@ -90,17 +91,16 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpszCm
     wc.cbClsExtra    = 0;
     wc.cbWndExtra    = 0;
     wc.hInstance     = hInstance;
-    wc.hIcon         = LoadIcon(g_hSatDLL, (LPCTSTR)IDI_BIG);
+    wc.hIcon         = LoadIcon(g_hSatDLL, MAKEINTRESOURCE(IDI_BIG));
     wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
     wc.lpszMenuName  = 0;
     wc.lpszClassName = APP_NAME;
-    wc.hIconSm       = LoadIcon(g_hSatDLL, (LPCTSTR)IDI_SMALL);
+    wc.hIconSm       = LoadImage(g_hSatDLL, MAKEINTRESOURCE(IDI_SMALL), IMAGE_ICON, 16, 16, 0);
 
     if (!RegisterClassEx(&wc))
     {
-        MessageBox(NULL, _T("Could not register window."), _T("Error"),
-            MB_OK | MB_ICONERROR);
+        DisplayError(NULL, g_hSatDLL, IDS_ERR_REGISTERCLASS, IDS_ERR_TITLE);
         return FALSE;
     }
 
@@ -111,11 +111,11 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpszCm
 
     if (NULL == hWnd)
     {
-        MessageBox(NULL, _T("Could not create window."), _T("Error"),
-            MB_OK | MB_ICONERROR);
+        DisplayError(NULL, g_hSatDLL, IDS_ERR_CREATEWINDOW, IDS_ERR_TITLE);
         return FALSE;
     }
 
+    // show normal or maximized, depending on what we got from the registry
     ShowWindow(hWnd, (g_bMaximized ? SW_SHOWMAXIMIZED : SW_SHOWNORMAL));
     UpdateWindow(hWnd);
 
@@ -139,16 +139,13 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpszCm
 /// <summary>
 /// Main window procedure.
 /// </summary>
-LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg)
     {
     case WM_CREATE:
         {
             HWND hEdit;
-            TLOGFONT lf;
-            HFONT hFont;
-            LPCTSTR lpszCmdLine;
             TCHAR szFileName[MAX_PATH];
 
             // now that we have the handle of the window we can change the language
@@ -160,24 +157,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 0, 0, 0, 0,
                 hWnd, (HMENU)IDC_EDIT_MAIN, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
 
-            // get a handle to the OEM fixed font, and copy its information to
-            // a LOGFONT structure
-            GetObject(GetStockObject(OEM_FIXED_FONT), sizeof (TLOGFONT), &lf);
-            // change some font attributes
-            lf.lfHeight = g_nFontSize;
-            lf.lfWidth = 0;
-            lstrcpy(lf.lfFaceName, g_szFontName);
-            // create the font
-            hFont = CreateFontIndirect(&lf);
-            // set the font
-            SendMessage(hEdit, WM_SETFONT, (WPARAM)hFont, MAKELPARAM(TRUE, 0));
+            // change its font
+            ChangeFont(hWnd, g_szFontName, g_nFontSize);
 
             // create a brush which will be used to paint the background
             g_hBrush = CreateSolidBrush(g_rgbEditBg);
 
             // if a command line was passed, we try to load the first argument
-            lpszCmdLine = GetCommandLine();
-            GetCommandLineArgument(szFileName, lpszCmdLine, 1);
+            GetCommandLineArgument(GetCommandLine(), 1, szFileName);
             LoadTextFileToEdit(hWnd, szFileName);
         }
         break;
@@ -194,15 +181,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         break;
 
     case WM_SETFOCUS:
-        {
-            // give the focus to the edit control so that the user can scroll
-            SetFocus(GetDlgItem(hWnd, IDC_EDIT_MAIN));
-        }
+        // give the focus to the edit control so that the user can scroll
+        SetFocus(GetDlgItem(hWnd, IDC_EDIT_MAIN));
         break;
 
     case WM_SIZE:
         {
-            RECT rcWnd;
+            RECT rect;
 
             // resize the edit control so that it fits the window
             SetWindowPos(GetDlgItem(hWnd, IDC_EDIT_MAIN), NULL,
@@ -216,9 +201,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 break;
             case SIZE_RESTORED:
                 g_bMaximized = FALSE;
-                GetWindowRect(hWnd, &rcWnd);
-                g_nWidth = rcWnd.right - rcWnd.left;
-                g_nHeight = rcWnd.bottom - rcWnd.top;
+                GetWindowRect(hWnd, &rect);
+                g_nWidth = rect.right - rect.left;
+                g_nHeight = rect.bottom - rect.top;
                 break;
             }
         }
@@ -226,14 +211,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
     case WM_DROPFILES:
         {
-            TCHAR szFileName[MAX_PATH];
+            TCHAR szFileName[MAX_PATH] = _T("");
 
             // load the dropped file
             DragQueryFile((HDROP)wParam, 0, szFileName, MAX_PATH);
             if (!LoadTextFileToEdit(hWnd, szFileName))
             {
-                MessageBox(hWnd, _T("Could not open file."), _T("Error"),
-                    MB_OK | MB_ICONEXCLAMATION);
+                DisplayError(hWnd, g_hSatDLL, IDS_ERR_OPENFILE, IDS_ERR_TITLE);
             }
             DragFinish((HDROP)wParam);
             // bring the window to foreground after drag & drop
@@ -242,24 +226,47 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         break;
 
     case WM_COMMAND:
-        switch(LOWORD(wParam))
+        switch (LOWORD(wParam))
         {
         case ID_FILE_OPEN:
-            DoFileOpen(hWnd);
+            {
+                TCHAR szFileName[MAX_PATH] = _T("");
+                TCHAR szFileFilter[MAX_LOADSTRING];
+                LPTSTR lpszTemp = szFileFilter;
+
+                LoadString(g_hSatDLL, IDS_FILE_FILTER, szFileFilter, MAX_LOADSTRING);
+                // replace the '|' separators in the filter string with '\0'
+                while (_T('\0') != *lpszTemp)
+                {
+                    if (_T('|') == *lpszTemp)
+                    {
+                        *lpszTemp = '\0';
+                    }
+                    lpszTemp++;
+                }
+
+                // display a file chooser
+                if (FileChooser(hWnd, szFileFilter, szFileName))
+                {
+                    // try to load the file, and show a message in case of error
+                    if (!LoadTextFileToEdit(hWnd, szFileName))
+                    {
+                        DisplayError(hWnd, g_hSatDLL, IDS_ERR_OPENFILE, IDS_ERR_TITLE);
+                    }
+                }
+            }
             break;
 
         case ID_FILE_EXIT:
-            PostMessage(hWnd, WM_CLOSE, 0, 0);
+            SendMessage(hWnd, WM_CLOSE, 0, 0);
             break;
 
         case ID_EDIT_PREF:
-            DialogBox(g_hSatDLL, (LPCTSTR)IDD_PREF, hWnd,
-                (DLGPROC)PrefDlgProc);
+            DialogBox(g_hSatDLL, (LPCTSTR)IDD_PREF, hWnd, (DLGPROC)PrefDlgProc);
             break;
 
         case ID_HELP_ABOUT:
-            DialogBox(g_hSatDLL, (LPCTSTR)IDD_ABOUT, hWnd,
-                (DLGPROC)AboutDlgProc);
+            DialogBox(g_hSatDLL, (LPCTSTR)IDD_ABOUT, hWnd, (DLGPROC)AboutDlgProc);
             break;
         }
         break;
@@ -268,12 +275,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         // save settings to the registry
         SaveRegistrySettings();
 
-        // clean up
-        DeleteObject(g_hBrush);
         DestroyWindow(hWnd);
         break;
 
     case WM_DESTROY:
+        // clean up
+        DeleteObject(g_hFont);
+        DeleteObject(g_hBrush);
+
         PostQuitMessage(0);
         break;
 
@@ -287,21 +296,21 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 /// <summary>
 /// Load settings from the registry.
 /// </summary>
-void LoadRegistrySettings()
+static VOID LoadRegistrySettings()
 {
     HKEY hKey;
 
     // read settings for the current user
     if (ERROR_SUCCESS == RegCreateKeyEx(HKEY_CURRENT_USER, APP_PREFS_KEY, 0, 0, 0, KEY_READ, 0, &hKey, 0))
     {
-        ReadRegistryInt(hKey, _T("Maximized"), &g_bMaximized, FALSE);
-        ReadRegistryInt(hKey, _T("Width"), &g_nWidth, DEFAULT_WIDTH);
-        ReadRegistryInt(hKey, _T("Height"), &g_nHeight, DEFAULT_HEIGHT);
         ReadRegistryInt(hKey, _T("Language"), (LPLONG)&g_langUI, DEFAULT_LANGUI);
         ReadRegistryStr(hKey, _T("FontName"), g_szFontName, LF_FACESIZE, DEFAULT_FONTNAME);
         ReadRegistryInt(hKey, _T("FontSize"), &g_nFontSize, DEFAULT_FONTSIZE);
         ReadRegistryInt(hKey, _T("EditForeground"), &g_rgbEditFg, DEFAULT_EDITFG);
         ReadRegistryInt(hKey, _T("EditBackground"), &g_rgbEditBg, DEFAULT_EDITBG);
+        ReadRegistryInt(hKey, _T("Maximized"), &g_bMaximized, FALSE);
+        ReadRegistryInt(hKey, _T("Width"), &g_nWidth, DEFAULT_WIDTH);
+        ReadRegistryInt(hKey, _T("Height"), &g_nHeight, DEFAULT_HEIGHT);
         RegCloseKey(hKey);
     }
 }
@@ -309,21 +318,21 @@ void LoadRegistrySettings()
 /// <summary>
 /// Load settings to the registry.
 /// </summary>
-void SaveRegistrySettings()
+static VOID SaveRegistrySettings()
 {
     HKEY hKey;
 
     // write settings for the current user
     if (ERROR_SUCCESS == RegCreateKeyEx(HKEY_CURRENT_USER, APP_PREFS_KEY, 0, 0, 0, KEY_WRITE, 0, &hKey, 0))
     {
-        WriteRegistryInt(hKey, _T("Maximized"), g_bMaximized);
-        WriteRegistryInt(hKey, _T("Width"), g_nWidth);
-        WriteRegistryInt(hKey, _T("Height"), g_nHeight);
         WriteRegistryInt(hKey, _T("Language"), g_langUI);
         WriteRegistryStr(hKey, _T("FontName"), g_szFontName);
         WriteRegistryInt(hKey, _T("FontSize"), g_nFontSize);
         WriteRegistryInt(hKey, _T("EditForeground"), g_rgbEditFg);
         WriteRegistryInt(hKey, _T("EditBackground"), g_rgbEditBg);
+        WriteRegistryInt(hKey, _T("Maximized"), g_bMaximized);
+        WriteRegistryInt(hKey, _T("Width"), g_nWidth);
+        WriteRegistryInt(hKey, _T("Height"), g_nHeight);
         RegCloseKey(hKey);
     }
 }
@@ -331,7 +340,9 @@ void SaveRegistrySettings()
 /// <summary>
 /// Changes the language of the window.
 /// </summary>
-void ChangeLanguage(HWND hWnd, LANGID langID)
+/// <param name="hWnd">Handle to the parent window.</param>
+/// <param name="langID">Language identifier.</param>
+VOID ChangeLanguage(HWND hWnd, LANGID langID)
 {
     g_langUI = langID;
     g_hSatDLL = LoadSatelliteDLL(g_langUI, g_szLangPath, _T("res.dll"));
@@ -343,19 +354,6 @@ void ChangeLanguage(HWND hWnd, LANGID langID)
     LoadString(g_hSatDLL, IDS_NFO_DESC, g_szNFODesc, MAX_LOADSTRING);
     LoadString(g_hSatDLL, IDS_DIZ_NAME, g_szDIZName, MAX_LOADSTRING);
     LoadString(g_hSatDLL, IDS_DIZ_DESC, g_szDIZDesc, MAX_LOADSTRING);
-    LoadString(g_hSatDLL, IDS_FILTER, g_szFilter, MAX_LOADSTRING);
-    // replace the '|' separators in the filter string with '\0'
-    {
-        LPTSTR lpszTemp = g_szFilter;
-        while (*lpszTemp != '\0')
-        {
-            if (*lpszTemp == '|')
-            {
-                *lpszTemp = '\0';
-            }
-            lpszTemp++;
-        }
-    }
 
     if (NULL != hWnd)
     {
@@ -367,9 +365,9 @@ void ChangeLanguage(HWND hWnd, LANGID langID)
         UpdateWindow(hWnd);
 
         // update the icon
-        hIcon = LoadIcon(g_hSatDLL, (LPCTSTR)IDI_BIG);
+        hIcon = LoadIcon(g_hSatDLL, MAKEINTRESOURCE(IDI_BIG));
         SendMessage(hWnd, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
-        hIcon = LoadIcon(g_hSatDLL, (LPCTSTR)IDI_SMALL);
+        hIcon = LoadImage(g_hSatDLL, MAKEINTRESOURCE(IDI_SMALL), IMAGE_ICON, 16, 16, 0);
         SendMessage(hWnd, WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
 
         // update the title of the main window
@@ -385,9 +383,62 @@ void ChangeLanguage(HWND hWnd, LANGID langID)
 }
 
 /// <summary>
+/// Changes the font of the edit control.
+/// </summary>
+/// <param name="hWnd">Handle to the parent window.</param>
+/// <param name="lpszFontName">Font name.</param>
+/// <param name="nFontSize">Font size.</param>
+VOID ChangeFont(HWND hWnd, LPCTSTR lpszFontName, LONG nFontSize)
+{
+    lstrcpy(g_szFontName, lpszFontName);
+    g_nFontSize = nFontSize;
+
+    // create the font
+    DeleteObject(g_hFont);
+    g_hFont = CreateFont(PointsToLogical(g_nFontSize),
+        0, 0, 0,
+        FW_DONTCARE,
+        FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET,
+        OUT_DEFAULT_PRECIS,
+        CLIP_DEFAULT_PRECIS,
+        DEFAULT_QUALITY,
+        DEFAULT_PITCH,
+        g_szFontName);
+
+    // set the font
+    SendDlgItemMessage(hWnd, IDC_EDIT_MAIN, WM_SETFONT, (WPARAM)g_hFont, MAKELPARAM(TRUE, 0));
+
+    // redraw the client area of the main window
+    InvalidateRect(hWnd, NULL, TRUE);
+    UpdateWindow(hWnd);
+}
+
+/// <summary>
+/// Changes the color of the edit control.
+/// </summary>
+/// <param name="hWnd">Handle to the parent window.</param>
+/// <param name="rgbFore">Foreground color.</param>
+/// <param name="rgbBack">Background color.</param>
+VOID ChangeColor(HWND hWnd, COLORREF rgbFore, COLORREF rgbBack)
+{
+    g_rgbEditFg = rgbFore;
+    g_rgbEditBg = rgbBack;
+
+    // create the brush for painting the background
+    DeleteObject(g_hBrush);
+    g_hBrush = CreateSolidBrush(g_rgbEditBg);
+
+    // redraw the client area of the main window
+    InvalidateRect(hWnd, NULL, TRUE);
+    UpdateWindow(hWnd);
+}
+
+/// <summary>
 /// Updates the title of the window.
 /// </summary>
-void UpdateTitle(HWND hWnd)
+/// <param name="hWnd">Handle to the parent window.</param>
+static VOID UpdateTitle(HWND hWnd)
 {
     HANDLE hHeap = GetProcessHeap();
     LPTSTR szShortFileName;
@@ -419,45 +470,16 @@ void UpdateTitle(HWND hWnd)
 }
 
 /// <summary>
-/// Shows an Open common dialog box that lets the user select the file to load.
-/// </summary>
-/// <param name="hWnd">Handle to the parent window.</param>
-void DoFileOpen(HWND hWnd)
-{
-    OPENFILENAME ofn;
-    TCHAR szFileName[MAX_PATH] = _T("");
-
-    ZeroMemory(&ofn, sizeof (ofn));
-    ofn.lStructSize = sizeof (OPENFILENAME);
-    ofn.hwndOwner   = hWnd;
-    ofn.lpstrFilter = g_szFilter;
-    ofn.lpstrFile   = szFileName;
-    ofn.nMaxFile    = MAX_PATH;
-    ofn.Flags       = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
-
-    // show open common dialog
-    if (GetOpenFileName(&ofn))
-    {
-        // try to load the file, and show a message in case of error
-        if (!LoadTextFileToEdit(hWnd, szFileName))
-        {
-            MessageBox(hWnd, _T("Could not open file."), _T("Error"),
-                MB_OK | MB_ICONEXCLAMATION);
-        }
-    }
-}
-
-/// <summary>
 /// Loads a text file into the edit control.
 /// </summary>
 /// <param name="hWnd">Handle to the parent window.</param>
 /// <param name="lpszFileName">File name.</param>
 /// <returns>If the file was loaded correctly, the return value is nonzero. Else,
 /// the return value is zero.</returns>
-BOOL LoadTextFileToEdit(HWND hWnd, LPCTSTR lpszFileName)
+static BOOL LoadTextFileToEdit(HWND hWnd, LPCTSTR lpszFileName)
 {
-    HWND hEdit;
     HANDLE hFile;
+    HWND hEdit;
     BOOL bSuccess = FALSE;
 
     hFile = CreateFile(lpszFileName, GENERIC_READ, FILE_SHARE_READ, NULL,
@@ -484,7 +506,7 @@ BOOL LoadTextFileToEdit(HWND hWnd, LPCTSTR lpszFileName)
 
                 if (ReadFile(hFile, lpszFileContents, dwFileSize, &dwRead, NULL))
                 {
-                    int cch;
+                    INT cch;
 
 #ifdef UNICODE
 
@@ -578,11 +600,9 @@ BOOL LoadTextFileToEdit(HWND hWnd, LPCTSTR lpszFileName)
                         HeapFree(hHeap, 0, lpszDstBuffer);
                     }
                 }
-
                 HeapFree(hHeap, 0, lpszFileContents);
             }
         }
-
         CloseHandle(hFile);
     }
 

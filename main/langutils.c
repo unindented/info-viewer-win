@@ -9,24 +9,28 @@
 #include <tchar.h>
 #include "langutils.h"
 
+static BOOL IsHongKongVersion();
+static LANGID GetNTDLLNativeLangID();
+static BOOL CALLBACK EnumLangProc(HANDLE, LPCTSTR, LPCTSTR, LANGID, LPARAM);
+
 /// <summary>
 /// Populates the list of languages in a combo box according to the
 /// subdirectories named with decimal LCID.
 /// </summary>
 /// <param name="hCombo">Handle to the combo box.</param>
 /// <param name="langSelected">Language to be selected.</param>
-/// <param name="lpszBaseDir">Relative path to the folder containing the
-/// language subdirectories.</param>
-UINT PopulateLanguagesComboBox(HWND hCombo, LANGID langSelected, LPCTSTR lpszBaseDir)
+/// <param name="lpszBaseDir">Directory with all the language subdirectories.</param>
+/// <returns>Total number of elements in the combo box.</returns>
+UINT PopulateLanguageComboBox(HWND hCombo, LANGID langSelected, LPCTSTR lpszBaseDir)
 {
     TCHAR szSearchPath[MAX_PATH];
     HANDLE hDir;
     WIN32_FIND_DATA findFileData;
     LANGID langID;
     TCHAR szLangName[MAX_LANGNAME];
-    INT nIndex = 0;
-    UINT i = 0;
-    UINT j = 0;
+    UINT nCount;
+    UINT i;
+    INT nIndex;
 
     // check string lengths
     if (lstrlen(lpszBaseDir) + 5 <= MAX_PATH)
@@ -36,18 +40,19 @@ UINT PopulateLanguagesComboBox(HWND hCombo, LANGID langSelected, LPCTSTR lpszBas
         hDir = FindFirstFile(szSearchPath, &findFileData);
         if (INVALID_HANDLE_VALUE != hDir)
         {
+            // reset contents
             SendMessage(hCombo, CB_RESETCONTENT, 0, 0);
             do
             {
                 if (findFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
                 {
-                    if (langID = _ttoi(findFileData.cFileName))
+                    langID = _ttoi(findFileData.cFileName);
+                    if (0 != langID)
                     {
                         if (GetLocaleInfo(langID, LOCALE_SENGLANGUAGE, szLangName, MAX_LANGNAME))
                         {
                             nIndex = (INT)SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM)szLangName);
-                            SendMessage(hCombo, CB_SETITEMDATA, (WPARAM)nIndex, (LPARAM)langID);
-                            i++;
+                            SendMessage(hCombo, CB_SETITEMDATA, nIndex, langID);
                         }
                     }
                 }
@@ -57,8 +62,10 @@ UINT PopulateLanguagesComboBox(HWND hCombo, LANGID langSelected, LPCTSTR lpszBas
         FindClose(hDir);
     }
 
+    nCount = (INT)SendMessage(hCombo, CB_GETCOUNT, 0, 0);
+
     // if there are no languages, disable the combo box
-    if (0 == i)
+    if (nCount <= 0)
     {
         // if it has the focus, pass it to the next component
         if (GetFocus() == hCombo)
@@ -71,27 +78,32 @@ UINT PopulateLanguagesComboBox(HWND hCombo, LANGID langSelected, LPCTSTR lpszBas
     {
         // to set the current selection we have to loop through the combo box
         // because the addition sorted the combo box alphabetically
-        for (j = 0; j < i; j++)
+        for (i = 0; i < nCount; i++)
         {
-            if (SendMessage(hCombo, CB_GETITEMDATA, j, 0) == langSelected)
+            langID = (LANGID)SendMessage(hCombo, CB_GETITEMDATA, i, 0);
+            if (langID == langSelected)
             {
-                SendMessage(hCombo, CB_SETCURSEL, (WPARAM)j, 0);
-                return i;
+                SendMessage(hCombo, CB_SETCURSEL, i, 0);
+                break;
             }
         }
         // if no language was selected, try the primary language ID
-        langSelected = PRIMARYLANGID(langSelected);
-        for (j = 0; j < i; j++)
+        if (langSelected != langID)
         {
-            if (SendMessage(hCombo, CB_GETITEMDATA, j, 0) == langSelected)
+            langSelected = PRIMARYLANGID(langSelected);
+            for (i = 0; i < nCount; i++)
             {
-                SendMessage(hCombo, CB_SETCURSEL, (WPARAM)j, 0);
-                return i;
+                langID = (LANGID)SendMessage(hCombo, CB_GETITEMDATA, i, 0);
+                if (langID == langSelected)
+                {
+                    SendMessage(hCombo, CB_SETCURSEL, i, 0);
+                    break;
+                }
             }
         }
     }
 
-    return i;
+    return nCount;
 }
 
 /// <summary>
@@ -99,8 +111,9 @@ UINT PopulateLanguagesComboBox(HWND hCombo, LANGID langSelected, LPCTSTR lpszBas
 /// named with decimal LCID.
 /// </summary>
 /// <param name="langDesired">Desired language.</param>
-/// <param name="lpszBaseDir">Directory where all the subdirectories are.</param>
+/// <param name="lpszBaseDir">Directory with all the language subdirectories.</param>
 /// <param name="lpszSatName">Name of the satellite DLL.</param>
+/// <returns>Handle to the satellite DLL.</returns>
 HMODULE LoadSatelliteDLL(LANGID langDesired, LPCTSTR lpszBaseDir, LPCTSTR lpszSatName)
 {
     TCHAR szSatellitePath[MAX_PATH];
@@ -139,6 +152,7 @@ HMODULE LoadSatelliteDLL(LANGID langDesired, LPCTSTR lpszBaseDir, LPCTSTR lpszSa
 /// This function detects a correct initial UI language for all
 /// platforms (Win9x, ME, NT4, Windows 2000, Windows XP, Windows 2003).
 /// </summary>
+/// <returns>Language identifier.</returns>
 LANGID DetectLanguage()
 {
     OSVERSIONINFO versionInfo;
@@ -217,7 +231,8 @@ LANGID DetectLanguage()
 /// <summary>
 /// Checks if NT4 system is Hong Kong SAR version.
 /// </summary>
-BOOL IsHongKongVersion()
+/// <returns>True if it's the Hong Kong SAR version. False otherwise.</returns>
+static BOOL IsHongKongVersion()
 {
     HMODULE hMod;
     typedef BOOL (WINAPI *IMMRELEASECONTEXT)(HWND, HIMC);
@@ -243,7 +258,8 @@ BOOL IsHongKongVersion()
 /// Detects the language of ntdll.dll with some specific processing for the
 /// Hong Kong SAR version.
 /// </summary>
-LANGID GetNTDLLNativeLangID()
+/// <returns>Language identifier.</returns>
+static LANGID GetNTDLLNativeLangID()
 {
     LANGINFO langInfo;
     HMODULE hMod;
@@ -273,7 +289,7 @@ LANGID GetNTDLLNativeLangID()
 /// <summary>
 /// Procedure to enumerate languages.
 /// </summary>
-BOOL CALLBACK EnumLangProc(HANDLE hModule, LPCTSTR lpszType, LPCTSTR lpszName, LANGID langID, LPARAM lParam)
+static BOOL CALLBACK EnumLangProc(HANDLE hModule, LPCTSTR lpszType, LPCTSTR lpszName, LANGID langID, LPARAM lParam)
 {
     PLANGINFO pLangInfo;
 
@@ -281,5 +297,6 @@ BOOL CALLBACK EnumLangProc(HANDLE hModule, LPCTSTR lpszType, LPCTSTR lpszName, L
     pLangInfo->nCount++;
     pLangInfo->langID = langID;
 
+    // continue enumeration
     return TRUE;
 }

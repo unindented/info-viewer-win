@@ -73,20 +73,30 @@ END
 // Dialog
 //
 
-IDD_PREF DIALOG 0, 0, 154, 114
+IDD_PREF DIALOG 0, 0, 178, 188
 STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Preferencias"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    COMBOBOX        IDC_COMBO_LANG, 14, 20, 126, 54, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    GROUPBOX        "Idioma", IDC_STATIC, 6, 6, 142, 34
+    COMBOBOX        IDC_COMBO_LANG, 14, 20, 150, 98, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "Idioma", IDC_STATIC, 6, 6, 166, 34
 
-    CONTROL         "Archivos NFO (*.nfo)", IDC_CHECK_NFO, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 14, 60, 128, 10
-    CONTROL         "Archivos DIZ (*.diz)", IDC_CHECK_DIZ, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 14, 72, 128, 10
-    GROUPBOX        "Asociar aplicación con", IDC_STATIC, 6, 46, 142, 42
+    CONTROL         "Archivos NFO (*.nfo)", IDC_CHECK_NFO, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 14, 60, 150, 10
+    CONTROL         "Archivos DIZ (*.diz)", IDC_CHECK_DIZ, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 14, 72, 150, 10
+    GROUPBOX        "Asociar aplicación con", IDC_STATIC, 6, 46, 166, 42
 
-    DEFPUSHBUTTON   "Aceptar", IDOK, 44, 94, 50, 14
-    PUSHBUTTON      "Cancelar", IDCANCEL, 98, 94, 50, 14
+    LTEXT           "Fuente:", IDC_STATIC, 14, 107, 100, 8, SS_NOPREFIX
+    COMBOBOX        IDC_COMBO_FONTNAME, 14, 116, 100, 98, CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Tamaño:", IDC_STATIC, 120, 107, 44, 8, SS_NOPREFIX
+    COMBOBOX        IDC_COMBO_FONTSIZE, 120, 116, 44, 98, CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Color del texto:", IDC_STATIC, 14, 133, 72, 8, SS_NOPREFIX
+    COMBOBOX        IDC_COMBO_COLORFG, 14, 142, 72, 98, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Color del fondo:", IDC_STATIC, 92, 133, 72, 8, SS_NOPREFIX
+    COMBOBOX        IDC_COMBO_COLORBG, 92, 142, 72, 98, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "Apariencia", IDC_STATIC, 6, 94, 166, 68
+
+    DEFPUSHBUTTON   "Aceptar", IDOK, 66, 168, 50, 14
+    PUSHBUTTON      "Cancelar", IDCANCEL, 122, 168, 50, 14
 END
 
 IDD_ABOUT DIALOG  0, 0, 206, 68
@@ -96,7 +106,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON            IDI_BIG, IDC_MYICON, 10, 16, 16, 16
 
-    CTEXT           "iNFO 1.0.1 (2005-07-23)", IDC_STATIC, 50, 18, 142, 8, SS_NOPREFIX
+    CTEXT           "iNFO 1.0.2 (2005-08-07)", IDC_STATIC, 50, 18, 142, 8, SS_NOPREFIX
     CTEXT           "Copyright (C) 2005 Daniel Pérez Álvarez", IDC_STATIC, 50, 28, 142, 8, SS_NOPREFIX
     GROUPBOX        "Información", IDC_STATIC, 42, 6, 158, 36
 
@@ -120,7 +130,40 @@ BEGIN
     IDS_NFO_DESC    "NFO File"
     IDS_DIZ_NAME    "iNFO.DIZ"
     IDS_DIZ_DESC    "DIZ File"
-    IDS_FILTER      "Archivos NFO y DIZ (*.nfo; *.diz)|*.nfo;*.diz|Todos los archivos (*.*)|*.*|"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_FILE_FILTER         "Archivos NFO y DIZ (*.nfo; *.diz)|*.nfo;*.diz|Todos los archivos (*.*)|*.*|"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_COLOR_BLACK         "Negro"
+    IDS_COLOR_WHITE         "Blanco"
+    IDS_COLOR_MAROON        "Rojo oscuro"
+    IDS_COLOR_DARKGREEN     "Verde oscuro"
+    IDS_COLOR_OLIVE         "Oliva"
+    IDS_COLOR_DARKBLUE      "Azul oscuro"
+    IDS_COLOR_PURPLE        "Morado"
+    IDS_COLOR_AQUAMARINE    "Aguamarina"
+    IDS_COLOR_LIGHTGRAY     "Gris claro"
+    IDS_COLOR_DARKGRAY      "Gris oscuro"
+    IDS_COLOR_RED           "Rojo"
+    IDS_COLOR_GREEN         "Verde"
+    IDS_COLOR_YELLOW        "Amarillo"
+    IDS_COLOR_BLUE          "Azul"
+    IDS_COLOR_MAGENTA       "Magenta"
+    IDS_COLOR_CYAN          "Cian"
+    IDS_COLOR_CUSTOM        "Otro..."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ERR_TITLE           "Error"
+    IDS_ERR_REGISTERCLASS   "No se pudo registrar la ventana."
+    IDS_ERR_CREATEWINDOW    "No se pudo crear la ventana."
+    IDS_ERR_OPENFILE        "No se pudo abrir el archivo."
 END
 
 /////////////////////////////////////////////////////////////////////////////
@@ -129,8 +172,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
-  FILEVERSION 1,0,1,1
-  PRODUCTVERSION 1,0,1,1
+  FILEVERSION 1,0,2,1
+  PRODUCTVERSION 1,0,2,1
   FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
   FILEFLAGS 0x1L
@@ -148,12 +191,12 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "\0"
             VALUE "FileDescription", "iNFO\0"
-            VALUE "FileVersion", "1, 0, 0, 1\0"
+            VALUE "FileVersion", "1, 0, 2, 1\0"
             VALUE "InternalName", "info\0"
             VALUE "LegalCopyright", "Copyright (C) 2005\0"
             VALUE "OriginalFilename", "info.exe\0"
             VALUE "ProductName", "iNFO\0"
-            VALUE "ProductVersion", "1, 0, 1, 1\0"
+            VALUE "ProductVersion", "1, 0, 2, 1\0"
         END
     END
     BLOCK "VarFileInfo"

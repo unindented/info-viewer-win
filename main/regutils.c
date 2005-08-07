@@ -18,6 +18,8 @@
 /// value to be queried.</param>
 /// <param name="lpRetData">Buffer that receives the data.</param>
 /// <param name="cbLen">Number of bytes the buffer can hold.</param>
+/// <returns>On success, the return value is nonzero. Else, the return value is
+/// zero.</returns>
 BOOL ReadRegistryBin(HKEY hKey, LPCTSTR lpszKeyName, LPVOID lpRetData, ULONG cbLen)
 {
     ZeroMemory(lpRetData, cbLen);
@@ -32,6 +34,8 @@ BOOL ReadRegistryBin(HKEY hKey, LPCTSTR lpszKeyName, LPVOID lpRetData, ULONG cbL
 /// value to be queried.</param>
 /// <param name="lpRetInt">Buffer that receives the integer.</param>
 /// <param name="nDefault">Default value.</param>
+/// <returns>On success, the return value is nonzero. Else, the return value is
+/// zero.</returns>
 BOOL ReadRegistryInt(HKEY hKey, LPCTSTR lpszKeyName, LPLONG lpRetInt, LONG nDefault)
 {
     ULONG cbLen = sizeof (nDefault);
@@ -48,6 +52,8 @@ BOOL ReadRegistryInt(HKEY hKey, LPCTSTR lpszKeyName, LPLONG lpRetInt, LONG nDefa
 /// <param name="lpszRetStr">Buffer that receives the string.</param>
 /// <param name="cchLen">Number of characters the buffer can hold.</param>
 /// <param name="lpszDefault">Default value.</param>
+/// <returns>On success, the return value is nonzero. Else, the return value is
+/// zero.</returns>
 BOOL ReadRegistryStr(HKEY hKey, LPCTSTR lpszKeyName, LPTSTR lpszRetStr, ULONG cchLen, LPCTSTR lpszDefault)
 {
     ULONG cbLen = cchLen * sizeof (TCHAR);
@@ -63,6 +69,8 @@ BOOL ReadRegistryStr(HKEY hKey, LPCTSTR lpszKeyName, LPTSTR lpszRetStr, ULONG cc
 /// value to set.</param>
 /// <param name="lpData">Data to write.</param>
 /// <param name="cbLen">Size in bytes of data.</param>
+/// <returns>On success, the return value is nonzero. Else, the return value is
+/// zero.</returns>
 BOOL WriteRegistryBin(HKEY hKey, LPCTSTR lpszKeyName, LPVOID lpData, ULONG cbLen)
 {
     return (ERROR_SUCCESS == RegSetValueEx(hKey, lpszKeyName, 0, REG_BINARY, (LPBYTE)lpData, cbLen));
@@ -75,6 +83,8 @@ BOOL WriteRegistryBin(HKEY hKey, LPCTSTR lpszKeyName, LPVOID lpData, ULONG cbLen
 /// <param name="lpszKeyName">Null-terminated string containing the name of the
 /// value to set.</param>
 /// <param name="nInteger">Integer to write.</param>
+/// <returns>On success, the return value is nonzero. Else, the return value is
+/// zero.</returns>
 BOOL WriteRegistryInt(HKEY hKey, LPCTSTR lpszKeyName, LONG nInteger)
 {
     return (ERROR_SUCCESS == RegSetValueEx(hKey, lpszKeyName, 0, REG_DWORD, (LPBYTE)&nInteger, sizeof (nInteger)));
@@ -87,6 +97,8 @@ BOOL WriteRegistryInt(HKEY hKey, LPCTSTR lpszKeyName, LONG nInteger)
 /// <param name="lpszKeyName">Null-terminated string containing the name of the
 /// value to set.</param>
 /// <param name="lpszString">String to write.</param>
+/// <returns>On success, the return value is nonzero. Else, the return value is
+/// zero.</returns>
 BOOL WriteRegistryStr(HKEY hKey, LPCTSTR lpszKeyName, LPCTSTR lpszString)
 {
     return (ERROR_SUCCESS == RegSetValueEx(hKey, lpszKeyName, 0, REG_SZ, (LPBYTE)lpszString, (lstrlen(lpszString) + 1) * sizeof(TCHAR)));
@@ -97,6 +109,8 @@ BOOL WriteRegistryStr(HKEY hKey, LPCTSTR lpszKeyName, LPCTSTR lpszString)
 /// </summary>
 /// <param name="lpszExt">File name extension, including the period.</param>
 /// <param name="lpszProgID">Program identifier for that extension.</param>
+/// <returns>If the extension is associated to the app, the return value is
+/// nonzero. Else, the return value is zero.</returns>
 BOOL IsAssociatedExtToApp(LPCTSTR lpszExt, LPCTSTR lpszProgID)
 {
     HKEY hKey;
@@ -133,7 +147,7 @@ BOOL IsAssociatedExtToApp(LPCTSTR lpszExt, LPCTSTR lpszProgID)
 /// AssociateExtToApp(".abc", "MyApp", "ABC File", "text", "text/plain");
 /// </code>
 /// </example>
-void AssociateExtToApp(LPCTSTR lpszExt, LPCTSTR lpszProgID, LPCTSTR lpszDesc, LPCTSTR lpszPerceivedType, LPCTSTR lpszContentType)
+VOID AssociateExtToApp(LPCTSTR lpszExt, LPCTSTR lpszProgID, LPCTSTR lpszDesc, LPCTSTR lpszPerceivedType, LPCTSTR lpszContentType)
 {
     HKEY hKey;
     HKEY hKeyTmp;

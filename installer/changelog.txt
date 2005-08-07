@@ -1,5 +1,18 @@
 
 +-------------------------+
+| iNFO 1.0.2 (2005-08-07) |
++-------------------------+
+
+ * Improved the installation process, allowing the user to select which
+   components to install
+ * During installation, the font used by default by the application (IBMPC) now
+   gets registered correctly
+ * During installation and uninstallation, previous file associations are
+   backed up and restored
+ * Added new options to the "Preferences" dialog, so that the user can
+   customize the font and colors used by the application
+
++-------------------------+
 | iNFO 1.0.1 (2005-07-23) |
 +-------------------------+
 

@@ -7,6 +7,7 @@
 
 #include <windows.h>
 #include <tchar.h>
+#include "main.h"
 
 /// <summary>
 /// About dialog procedure.
@@ -16,10 +17,10 @@ BOOL CALLBACK AboutDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
     switch (msg)
     {
     case WM_INITDIALOG:
-        return TRUE;
+        break;
 
     case WM_COMMAND:
-        switch(LOWORD(wParam))
+        switch (LOWORD(wParam))
         {
         case IDOK:
         case IDCANCEL:
@@ -31,5 +32,6 @@ BOOL CALLBACK AboutDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
     default:
         return FALSE;
     }
+
     return TRUE;
 }
