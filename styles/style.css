@@ -1,0 +1,129 @@
+/** Layout **/
+
+#container {
+  width: 760px;
+  margin: 10px auto;
+}
+
+#content {
+  border: medium double #fff;
+  margin: 20px 0 20px 160px;
+  padding: 20px;
+}
+
+header {
+  padding: 10px;
+}
+
+nav {
+  border: medium double #fff;
+  float: left;
+  margin: 20px 0;
+  padding: 20px;
+  width: 100px;
+}
+
+footer {
+  clear: both;
+  padding: 10px;
+}
+
+/** Styles **/
+
+body {
+  color: #fff;
+  background: #000;
+  font: small/1.5 Courier, "Courier New", monospace;
+}
+
+a {
+  color: #66c;
+  font-weight: bold;
+  text-decoration: underline;
+}
+a:hover, a:active {
+  color: #99c;
+}
+
+ul, ol {
+  list-style: url('bullet_white.gif');
+  margin: 0 0 0 30px;
+}
+
+nav ul, nav ol {
+  list-style: url('bullet_color.gif');
+  margin: 0 0 0 10px;
+}
+
+h1 {
+  height: 140px;
+  background: transparent url('logo.gif') no-repeat center center;
+  font-size: xx-large;
+  text-align: center;
+}
+h1 span {
+  display: none;
+}
+
+h2 {
+  font-size: medium;
+  margin: 10px 0 0 0;
+  text-align: center;
+}
+
+h3 {
+  color: #66c;
+  border-bottom: 2px solid #66c;
+  font-size: large;
+}
+
+h4 {
+  color: #FFFFFF;
+  font-size: medium;
+  margin: 20px 0 10px 0;
+}
+
+#content p {
+  text-indent: 30px;
+}
+#content img {
+  border: none;
+  vertical-align: middle;
+}
+
+footer p {
+  text-align: center;
+}
+
+.sshots {
+  list-style: none;
+  margin: 0 0 0 15px;
+  overflow: auto;
+}
+.sshots li {
+  float: left;
+}
+.sshots img {
+  margin: 5px;
+  max-width: 250px;
+}
+
+.ribbon {
+  border: medium double #fff;
+  font-size: medium;
+  overflow: hidden;
+  position: fixed;
+  right: -4em;
+  top: 4em;
+  -webkit-transform: rotate(45deg);
+     -moz-transform: rotate(45deg);
+       -o-transform: rotate(45deg);
+          transform: rotate(45deg);
+}
+.ribbon a {
+  color: #fff;
+  display: block;
+  margin: 0.05em 0 0.075em 0;
+  padding: 0.5em 3.5em 0.35em 3.5em;
+  text-decoration: none;
+}
